@@ -1,26 +1,6 @@
 require 'sinatra'
 require 'json'
-require 'words_counted'
 require 'slim'
-require 'webrick'
-require 'webrick/https'
-require 'openssl'
-
-CERT_PATH = '/etc/apache2/ssl/'
-
-webrick_options = {
-        :Port               => 8443,
-        :Logger             => WEBrick::Log::new($stderr, WEBrick::Log::DEBUG),
-        :DocumentRoot       => "/var/www/html",
-        :SSLEnable          => true,
-        :SSLVerifyClient    => OpenSSL::SSL::VERIFY_NONE,
-        :SSLCertificate     => OpenSSL::X509::Certificate.new(  File.open(File.join(CERT_PATH, "server.crt")).read),
-        :SSLPrivateKey      => OpenSSL::PKey::RSA.new(          File.open(File.join(CERT_PATH, "server.key")).read),
-        :SSLCertName        => [ [ "CN",WEBrick::Utils::getservername ] ]
-}
-
-Rack::Handler::WEBrick.run MyServer, webrick_options
-
 
 get '/' do 
   slim :index 
@@ -42,13 +22,12 @@ post '/' do
   end
 
   word_count = count_words(params[:text])
-  counter = WordsCounted.count(params[:text])
-  counter.token_count
-  counter.token_frequency
+  counter = (params[:text]).scan(/\w+/).size
 
   totality = Hash.new
-  totality["count"] = counter.token_count
+  totality["count"] = counter
   totality["words"] = word_count
   @counted = totality.to_json
 
 end
+
